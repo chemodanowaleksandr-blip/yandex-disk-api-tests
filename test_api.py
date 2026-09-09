@@ -38,4 +38,4 @@ def test_yandex_disk_full_lifecycle(token):
     
     # 5. Удаляем созданную папку со всеми файлами внутри
     res_delete = requests.delete(api_url, headers=headers, params={"path": folder_name})
-    assert res_delete.status_code in [202, 204]
+    assert res_delete.status_code == 204 or res_delete.status_code == 202
