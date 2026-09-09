@@ -1,14 +1,13 @@
+import os
 import pytest
 import requests
 
-def pytest_addoption(parser):
-    parser.addoption("--token", action="store", default=None, help="Yandex Disk API Token")
-
 @pytest.fixture
-def token(request):
-    token_value = request.config.getoption("--token")
+def token():
+    # Робот Гитхаба сам возьмет токен из секретов, которые мы настроили
+    token_value = os.getenv("YANDEX_TOKEN")
     if not token_value:
-        pytest.fail("Запустите тест командой: pytest test_api.py --token=ТВОЙ_ТОКЕН")
+        pytest.fail("Токен не найден в переменных окружения!")
     return token_value
 
 # ТЕСТ 1: Проверка метода GET (Связь с Яндекс Диском)
