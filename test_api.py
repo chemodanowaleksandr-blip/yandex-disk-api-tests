@@ -12,27 +12,30 @@ def test_yandex_disk_connection(token):
     assert res.status_code == 200
 
 def test_yandex_disk_full_lifecycle(token):
-    h = {"Authorization": f"OAuth {token}"}
-    base_url = "https://yandex.netresources"
+    headers = {"Authorization": f"OAuth {token}"}
+    api_url = "https://yandex.netresources"
     
-    _path = "Yandex_Stazhirovka_Test_Folder"
-    file_path = f"{_path}/test_file.txt"
+    folder_name = "Yandex_Stazhirovka_Test_Folder"
+    file_path = f"{folder_name}/test_file.txt"
     
     # 1. Создаем папку
-    assert requests.put(base_url, headers=h, params={"path": _path}).status_code == 201
+    res_mkdir = requests.put(api_url, headers=headers, params={"path": folder_name})
+    assert res_mkdir.status_code == 201
     
     # 2. Получаем ссылку для загрузки файла
     upload_url = "https://yandex.netresources/upload"
-    upload_res = requests.get(upload_url, headers=h, params={"path": file_path, "overwrite": "true"})
-    assert upload_res.status_code == 200
-    href = upload_res.json().get("href")
+    res_upload_link = requests.get(upload_url, headers=headers, params={"path": file_path, "overwrite": "true"})
+    assert res_upload_link.status_code == 200
+    href = res_upload_link.json().get("href")
     
     # 3. Загружаем сам файл по полученной ссылке
-    assert requests.put(href, data="Hello Yandex!").status_code == 201
+    res_upload_file = requests.put(href, data="Hello Yandex!")
+    assert res_upload_file.status_code == 201
     
     # 4. Проверяем, что файл действительно появился
-    check_res = requests.get(base_url, headers=h, params={"path": file_path})
-    assert check_res.status_code == 200 and check_res.json().get("type") == "file"
+    res_check = requests.get(api_url, headers=headers, params={"path": file_path})
+    assert res_check.status_code == 200 and res_check.json().get("type") == "file"
     
     # 5. Удаляем созданную папку со всеми файлами внутри
-    assert requests.delete(base_url, headers=h, params={"path": _path}).status_code in [202, 204]
+    res_delete = requests.delete(api_url, headers=headers, params={"path": folder_name})
+    assert res_delete.status_code in [202, 204]
