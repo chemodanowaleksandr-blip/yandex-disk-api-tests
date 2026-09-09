@@ -3,7 +3,7 @@ name: Yandex Disk API Tests
 on:
   push:
     branches: [ develop ]
-  workflow_dispatch: # Позволяет запускать тесты вручную кнопкой
+  workflow_dispatch:
 
 jobs:
   run-api-tests:
@@ -23,5 +23,7 @@ jobs:
         pip install -r requirements.txt
 
     - name: Запускаем автотесты Яндекса
+      env:
+        YANDEX_TOKEN: ${{ secrets.YANDEX_TOKEN }}
       run: |
-        pytest test_api.py -v --token=${{ secrets.YANDEX_TOKEN }}
+        pytest test_api.py -v
