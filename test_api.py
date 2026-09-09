@@ -13,20 +13,26 @@ def test_yandex_disk_connection(token):
 
 def test_yandex_disk_full_lifecycle(token):
     h = {"Authorization": f"OAuth {token}"}
-    url = "https://yandex.net"
-    f_path = "Yandex_Stazhirovka_Test_Folder"
-    file_path = f"{f_path}/test_file.txt"
+    base_url = "https://yandex.netresources"
     
-    assert requests.put(url, headers=h, params={"path": f_path}).status_code == 201
+    _path = "Yandex_Stazhirovka_Test_Folder"
+    file_path = f"{_path}/test_file.txt"
     
-    upload_url = "https://yandex.net/resources/upload"
+    # 1. Создаем папку
+    assert requests.put(base_url, headers=h, params={"path": _path}).status_code == 201
+    
+    # 2. Получаем ссылку для загрузки файла (исправили урл)
+    upload_url = "https://yandex.netresources/upload"
     upload_res = requests.get(upload_url, headers=h, params={"path": file_path, "overwrite": "true"})
     assert upload_res.status_code == 200
     href = upload_res.json().get("href")
     
-    assert requests.put(href, data=b"Hello Yandex!").status_code == 201
+    # 3. Загружаем сам файл по полученной ссылке
+    assert requests.put(href, data="Hello Yandex!").status_code == 201
     
-    check_res = requests.get(url, headers=h, params={"path": file_path})
+    # 4. Проверяем, что файл действительно появился
+    check_res = requests.get(base_url, headers=h, params={"path": file_path})
     assert check_res.status_code == 200 and check_res.json().get("type") == "file"
     
-    assert requests.delete(url, headers=h, params={"path": f_path}).status_code in [202, 204]
+    # 5. Удаляем созданную папку со всем содержимым
+    assert requests.delete(base_url, headers=h, params={"path": _path}).status_code in [202, 204]
