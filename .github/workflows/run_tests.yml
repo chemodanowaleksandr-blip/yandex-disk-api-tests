@@ -1,0 +1,27 @@
+name: Yandex Disk API Tests
+
+on:
+  push:
+    branches: [ develop ]
+  workflow_dispatch: # Позволяет запускать тесты вручную кнопкой
+
+jobs:
+  run-api-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Читаем код из репозитория
+      uses: actions/checkout@v4
+
+    - name: Настраиваем Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Устанавливаем библиотеки
+      run: |
+        pip install -r requirements.txt
+
+    - name: Запускаем автотесты Яндекса
+      run: |
+        pytest test_api.py -v --token=${{ secrets.YANDEX_TOKEN }}
