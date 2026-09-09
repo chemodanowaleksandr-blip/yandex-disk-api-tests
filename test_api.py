@@ -21,7 +21,7 @@ def test_yandex_disk_full_lifecycle(token):
     # 1. Создаем папку
     assert requests.put(base_url, headers=h, params={"path": _path}).status_code == 201
     
-    # 2. Получаем ссылку для загрузки файла (исправили урл)
+    # 2. Получаем ссылку для загрузки файла
     upload_url = "https://yandex.netresources/upload"
     upload_res = requests.get(upload_url, headers=h, params={"path": file_path, "overwrite": "true"})
     assert upload_res.status_code == 200
@@ -34,5 +34,5 @@ def test_yandex_disk_full_lifecycle(token):
     check_res = requests.get(base_url, headers=h, params={"path": file_path})
     assert check_res.status_code == 200 and check_res.json().get("type") == "file"
     
-    # 5. Удаляем созданную папку со всем содержимым
+    # 5. Удаляем созданную папку со всеми файлами внутри
     assert requests.delete(base_url, headers=h, params={"path": _path}).status_code in [202, 204]
