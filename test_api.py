@@ -19,23 +19,33 @@ def test_yandex_disk_connection(token):
     response = requests.get(url, headers=headers)
     assert response.status_code == 200
 
-# ТЕСТ 2: Проверка метода POST (Создание папки) и DELETE (Удаление папки)
-def test_create_and_delete_folder(token):
-    base_url = "https://yandex.net/resources"
+# ТЕСТ 2: Полный цикл — Создание папки (POST), Загрузка файла (PUT) и Удаление (DELETE)
+def test_yandex_disk_full_lifecycle(token):
     headers = {"Authorization": f"OAuth {token}"}
-    params = {"path": "Yandex_Stazhirovка_Test_Folder"}
+    folder_url = "https://yandex.net/resources"
+    folder_path = "Yandex_Stazhirovka_Test_Folder"
+    file_path = f"{folder_path}/test_file.txt"
     
-    # 1. СОЗДАЕМ ПАПКУ (POST)
-    create_response = requests.put(base_url, headers=headers, params=params)
-    # Код 201 означает, что папка успешно создана
-    assert create_response.status_code == 201
-    
-    # 2. ПРОВЕРЯЕМ, ЧТО ПАПКА СУЩЕСТВУЕТ (GET)
-    check_response = requests.get(base_url, headers=headers, params=params)
-    assert check_response.status_code == 200
-    assert check_response.json().get("type") == "dir"
-    
-    # 3. УДАЛЯЕМ ПАПКУ ЗА СОБОЙ (DELETE)
-    delete_response = requests.delete(base_url, headers=headers, params=params)
-    # Код 202 или 204 означает успешное удаление/принятие запроса
-    assert delete_response.status_code in [202, 204]
+    # 1. СОЗДАЕМ ПАПКУ (PUT-запрос в API Яндекса для ресурсов)
+    create_dir_res = requests.put(folder_url, headers=headers, params={"path": folder_path})
+    assert create_dir_res.status_code == 201
+
+    # 2. ЗАПРАШИВАЕМ ССЫЛКУ НА ЗАГРУЗКУ ФАЙЛА (GET)
+    upload_url = "https://yandex.net/resources/upload"
+    upload_res = requests.get(upload_url, headers=headers, params={"path": file_path, "overwrite": "true"})
+    assert upload_res.status_code == 200
+    href = upload_res.json().get("href")
+
+    # 3. ЗАГРУЖАЕМ ФАЙЛ НА ДИСК (PUT по полученной ссылке href)
+    file_content = b"Hello, Yandex Team! This is automated test file."
+    put_file_res = requests.put(href, data=file_content)
+    assert put_file_res.status_code == 201
+
+    # 4. ПРОВЕРЯЕМ, ЧТО ФАЙЛ СУЩЕСТВУЕТ НА ДИСКЕ (GET)
+    check_file_res = requests.get(folder_url, headers=headers, params={"path": file_path})
+    assert check_file_res.status_code == 200
+    assert check_file_res.json().get("type") == "file"
+
+    # 5. ОЧИЩАЕМ ДИСК ЗА СОБОЙ — УДАЛЯЕМ ПАПКУ И ВСЁ ВНУТРИ (DELETE)
+    delete_res = requests.delete(folder_url, headers=headers, params={"path": folder_path})
+    assert delete_res.status_code in [202, 204]
