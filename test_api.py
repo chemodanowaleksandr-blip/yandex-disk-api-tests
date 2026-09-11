@@ -9,8 +9,8 @@ BASE_URL = "https://yandex.net"
 @pytest.fixture
 def token():
     """Фикстура для получения OAuth-токена."""
-    # Пытается взять токен из секретов GitHub Actions, если его там нет — берет дефолтное значение
-    return os.getenv("YANDEX_TOKEN", "ВАШ_РЕАЛЬНЫЙ_ТОКЕН")
+    # Вставьте ваш реальный OAuth-токен вместо текста ниже, например: "y0_AgAAAA..."
+    return "ВСТАВЬТЕ_СЮДА_ВАШ_РЕАЛЬНЫЙ_ТОКЕН"
 
 
 @pytest.fixture
@@ -33,7 +33,7 @@ def test_yandex_disk_full_lifecycle(headers):
     _path = "yandex_stazhirovka_test_folder"
     file_path = f"{_path}/test_file.txt"
     
-    # 1. Создание папки (201 — создано, 409 — папка уже существует, если прошлый тест упал)
+    # 1. Создание папки (201 — создано, 409 — папка уже существует)
     res_mkdir = requests.put(resources_url, headers=headers, params={"path": _path})
     assert res_mkdir.status_code in (201, 409)
 
