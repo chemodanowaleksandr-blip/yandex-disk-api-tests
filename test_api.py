@@ -1,3 +1,4 @@
+import os
 import pytest
 import requests
 
@@ -8,8 +9,8 @@ BASE_URL = "https://yandex.net"
 @pytest.fixture
 def token():
     """Фикстура для получения OAuth-токена."""
-    # Рекомендуется в будущем выносить токен в переменные окружения: os.getenv("YANDEX_TOKEN")
-    return os.getenv("YANDEX_TOKEN", "ВАШ_ТОКЕН")
+    # Пытается взять токен из секретов GitHub Actions, если его там нет — берет дефолтное значение
+    return os.getenv("YANDEX_TOKEN", "ВАШ_РЕАЛЬНЫЙ_ТОКЕН")
 
 
 @pytest.fixture
@@ -32,9 +33,9 @@ def test_yandex_disk_full_lifecycle(headers):
     _path = "yandex_stazhirovka_test_folder"
     file_path = f"{_path}/test_file.txt"
     
-    # 1. Создание папки
+    # 1. Создание папки (201 — создано, 409 — папка уже существует, если прошлый тест упал)
     res_mkdir = requests.put(resources_url, headers=headers, params={"path": _path})
-    assert res_mkdir.status_code in [201, 409]  # 201 - создано, 409 - уже существует
+    assert res_mkdir.status_code in (201, 409)
 
     # 2. Получение ссылки для загрузки файла
     res_upload_link = requests.get(
@@ -50,11 +51,11 @@ def test_yandex_disk_full_lifecycle(headers):
     res_upload_file = requests.put(href, data="Hello Yandex!")
     assert res_upload_file.status_code == 201
 
-    # 4. Проверка, что файл действительно появился
+    # 4. Проверка, что файл действительно появился на Диске
     res_check = requests.get(resources_url, headers=headers, params={"path": file_path})
     assert res_check.status_code == 200
     assert res_check.json().get("type") == "file"
 
-    # 5. Удаление созданной папки со всем содержимым
+    # 5. Удаление созданной папки со всем содержимым (202 — принято на удаление, 204 — удалено)
     res_delete = requests.delete(resources_url, headers=headers, params={"path": _path})
-    assert res_delete.status_code in [202, 204]
+    assert res_delete.status_code in (202, 204)
