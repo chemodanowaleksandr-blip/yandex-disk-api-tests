@@ -7,24 +7,30 @@ def token():
     return os.getenv("YANDEX_TOKEN")
 
 def test_yandex_disk_connection(token):
-    url = "https://cloud-api.yandex.net/v1/disk/"
+    url = "https://yandex.net"
     res = requests.get(url, headers={"Authorization": f"OAuth {token}"})
     assert res.status_code == 200
 
 def test_yandex_disk_full_lifecycle(token):
     headers = {"Authorization": f"OAuth {token}"}
-    api_url = "https://cloud-api.yandex.net/v1/disk/resources"
+    api_url = "https://yandex.netresources"
     
     folder_name = "Yandex_Stazhirovka_Test_Folder"
     file_path = f"{folder_name}/test_file.txt"
     
     # 1. Создаем папку
     res_mkdir = requests.put(api_url, headers=headers, params={"path": folder_name})
-    assert res_mkdir.status_code == 201
+    # Если папка уже создана ранее, Яндекс вернет 409, это нормально для повторного запуска
+    assert res_mkdir.status_code in [201, 409]
     
     # 2. Получаем ссылку для загрузки файла
-    upload_url = "https://yandex.net"
+    upload_url = "https://yandex.netresources/upload"
     res_upload_link = requests.get(upload_url, headers=headers, params={"path": file_path, "overwrite": "true"})
+    
+    # ЕСЛИ ТУТ УПАДЕТ: мы увидим в логах реальный ответ Яндекса
+    print(f"STATUS CODE: {res_upload_link.status_code}")
+    print(f"RESPONSE TEXT: {res_upload_link.text}")
+    
     assert res_upload_link.status_code == 200
     href = res_upload_link.json().get("href")
     
@@ -38,4 +44,4 @@ def test_yandex_disk_full_lifecycle(token):
     
     # 5. Удаляем созданную папку со всеми файлами внутри
     res_delete = requests.delete(api_url, headers=headers, params={"path": folder_name})
-    assert res_delete.status_code == 204 or res_delete.status_code == 202
+    assert res_delete.status_code in [202, 204]
