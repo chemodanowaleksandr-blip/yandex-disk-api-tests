@@ -9,8 +9,8 @@ BASE_URL = "https://yandex.net"
 @pytest.fixture
 def token():
     """Фикстура для получения OAuth-токена."""
-    # Получаем токен напрямую из секретов репозитория GitHub
-    return os.getenv("YANDEX_TOKEN")
+    # Запишите ваш реальный токен в кавычках ниже (например: "y0_AgAAAA...")
+    return "СЮДА_ВСТАВЬТЕ_ВАШ_ТОКЕН"
 
 
 @pytest.fixture
