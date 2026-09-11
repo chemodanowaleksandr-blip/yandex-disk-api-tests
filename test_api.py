@@ -7,7 +7,6 @@ def token():
     return os.getenv("YANDEX_TOKEN")
 
 def test_yandex_disk_connection(token):
-    # Прямой урл строго из условий задания Яндекса
     url = "https://yandex.net"
     res = requests.get(url, headers={"Authorization": f"OAuth {token}"})
     assert res.status_code == 200
@@ -19,7 +18,7 @@ def test_yandex_disk_full_lifecycle(token):
     _path = "Yandex_Stazhirovka_Test_Folder"
     file_path = f"{_path}/test_file.txt"
     
-    # 1. Создаем папку (если уже есть, Яндекс вернет 409, это тоже успех для теста)
+    # 1. Создаем папку
     res_mkdir = requests.put(base_url, headers=headers, params={"path": _path})
     assert res_mkdir.status_code in [201, 409]
     
